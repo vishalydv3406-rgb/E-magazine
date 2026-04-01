@@ -13,13 +13,18 @@ interface AppState {
   user: User | null;
   setUser: (user: User | null) => void;
   logout: () => void;
+  hydrate: () => void;
 }
 
-export const useStore = create<AppState>((set: any) => ({
+export const useStore = create<AppState>((set) => ({
   user: null,
   setUser: (user: User | null) => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('user', JSON.stringify(user));
+      if (user) {
+        localStorage.setItem('user', JSON.stringify(user));
+      } else {
+        localStorage.removeItem('user');
+      }
     }
     set({ user });
   },
@@ -28,5 +33,17 @@ export const useStore = create<AppState>((set: any) => ({
       localStorage.removeItem('user');
     }
     set({ user: null });
+  },
+  hydrate: () => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('user');
+      if (stored) {
+        try {
+          set({ user: JSON.parse(stored) });
+        } catch {
+          localStorage.removeItem('user');
+        }
+      }
+    }
   },
 }));

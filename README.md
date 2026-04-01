@@ -40,7 +40,7 @@ The Backend connects to MongoDB, serves API routes, and manages user state.
    ```bash
    npm run dev
    ```
-   This runs the server using Nodemon on port `5000`. Leave this terminal open!
+   This runs the server using Nodemon on port `5001`. Leave this terminal open!
 
 ### 3. Set up the Frontend Server
 The Frontend renders the React user interface using Next.js.

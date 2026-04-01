@@ -4,8 +4,9 @@ import { motion, useScroll, useSpring } from 'framer-motion';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import axios from '@/lib/axios';
-import { Bookmark, Heart, MessageCircle, Share2, Send } from 'lucide-react';
+import { Bookmark, Heart, MessageCircle, Share2, Send, ArrowLeft, Clock, Eye } from 'lucide-react';
 import { useStore } from '@/store/useStore';
+import Link from 'next/link';
 
 export default function ArticlePage() {
   const { id } = useParams();
@@ -17,7 +18,7 @@ export default function ArticlePage() {
   const [loading, setLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
   const [shareText, setShareText] = useState('Share');
-  
+
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
 
@@ -82,116 +83,167 @@ export default function ArticlePage() {
   };
 
   if (loading) {
-    return <div className="max-w-3xl mx-auto px-4 py-20 animate-pulse bg-zinc-200 dark:bg-zinc-800 h-96 rounded-2xl" />;
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-12 animate-pulse">
+        <div className="h-4 w-24 bg-zinc-200 dark:bg-zinc-800 rounded mb-8" />
+        <div className="h-8 w-20 bg-blue-200 dark:bg-blue-900 rounded-full mb-6" />
+        <div className="h-12 w-3/4 bg-zinc-200 dark:bg-zinc-800 rounded mb-4" />
+        <div className="h-12 w-1/2 bg-zinc-200 dark:bg-zinc-800 rounded mb-8" />
+        <div className="space-y-4">
+          {[1,2,3,4,5].map(i => <div key={i} className="h-4 bg-zinc-100 dark:bg-zinc-900 rounded" />)}
+        </div>
+      </div>
+    );
   }
 
-  if (!article) return <div className="text-center py-20">Article not found</div>;
+  if (!article) return (
+    <div className="text-center py-20">
+      <p className="text-xl font-bold text-zinc-600 dark:text-zinc-400 mb-4">Article not found</p>
+      <Link href="/" className="text-blue-500 hover:underline">Go home →</Link>
+    </div>
+  );
 
-  // Optimistic like calculation
   const isLiked = user && article?.likes?.some?.((l: any) => l === user._id || l === 'id') || false;
 
   return (
     <>
-      <motion.div className="fixed top-0 left-0 right-0 h-1 bg-blue-500 origin-left z-50" style={{ scaleX }} />
-      
+      {/* Reading Progress Bar */}
+      <motion.div className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-600 origin-left z-50" style={{ scaleX }} />
+
       <main className="max-w-3xl mx-auto px-4 py-12">
-        <header className="mb-10 text-center">
-          <span className="text-blue-500 font-medium mb-4 block tracking-wider uppercase text-sm">
-            {article.magazineId?.category || 'Category'}
+        {/* Back button */}
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors mb-8 group"
+        >
+          <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+          Back
+        </button>
+
+        {/* Article Header */}
+        <header className="mb-10">
+          <span className="inline-block text-blue-500 font-bold uppercase tracking-wider text-xs mb-4 bg-blue-500/10 px-3 py-1 rounded-full">
+            {article.magazineId?.category || 'Article'}
           </span>
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
+          <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-6 leading-tight">
             {article.title}
           </h1>
-          <div className="flex items-center justify-center gap-4 text-sm text-zinc-500">
-            <span>By {article.authorId?.name || 'Admin'}</span>
-            <span>•</span>
-            <span>{article.readingTime} min read</span>
-            <span>•</span>
-            <span>{article.views} views</span>
+          <div className="flex flex-wrap items-center gap-3 text-sm text-zinc-500">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                {article.authorId?.name?.charAt(0) || 'A'}
+              </div>
+              <span className="font-medium text-zinc-700 dark:text-zinc-300">{article.authorId?.name || 'Admin'}</span>
+            </div>
+            <span className="text-zinc-300 dark:text-zinc-700">•</span>
+            <span className="flex items-center gap-1"><Clock size={13} /> {article.readingTime} min read</span>
+            <span className="text-zinc-300 dark:text-zinc-700">•</span>
+            <span className="flex items-center gap-1"><Eye size={13} /> {article.views?.toLocaleString()} views</span>
+            {article.magazineId && (
+              <>
+                <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                <Link href={`/magazines/${article.magazineId._id}`} className="text-blue-500 hover:underline font-medium">
+                  {article.magazineId.title}
+                </Link>
+              </>
+            )}
           </div>
         </header>
 
-        <div className="flex justify-center gap-8 mb-12 py-4 border-y border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400">
-          <button 
+        {/* Action Bar */}
+        <div className="flex items-center justify-between mb-12 py-3 px-4 bg-zinc-50 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-zinc-600 dark:text-zinc-400">
+          <button
             onClick={handleLike}
-            className={`flex items-center gap-2 transition-colors group ${isLiked ? 'text-red-500' : 'hover:text-red-500'}`}
+            className={`flex items-center gap-2 text-sm font-medium transition-colors group px-3 py-1.5 rounded-xl hover:bg-white dark:hover:bg-zinc-800 ${isLiked ? 'text-red-500' : 'hover:text-red-500'}`}
           >
-            <Heart size={20} className={isLiked ? 'fill-current' : 'group-hover:fill-current'} /> 
-            <span className="font-medium">{article.likes?.length || 0}</span>
+            <Heart size={18} className={isLiked ? 'fill-current' : ''} />
+            <span>{article.likes?.length || 0}</span>
           </button>
-          <a href="#comments" className="flex items-center gap-2 hover:text-blue-500 transition-colors">
-            <MessageCircle size={20} /> <span className="font-medium">{comments.length}</span>
+          <a href="#comments" className="flex items-center gap-2 text-sm font-medium hover:text-blue-500 transition-colors px-3 py-1.5 rounded-xl hover:bg-white dark:hover:bg-zinc-800">
+            <MessageCircle size={18} /> <span>{comments.length}</span>
           </a>
-          <button 
+          <button
             onClick={handleSave}
-            className={`flex items-center gap-2 transition-colors ${isSaved ? 'text-green-500' : 'hover:text-green-500'}`}
+            className={`flex items-center gap-2 text-sm font-medium transition-colors px-3 py-1.5 rounded-xl hover:bg-white dark:hover:bg-zinc-800 ${isSaved ? 'text-green-500' : 'hover:text-green-500'}`}
           >
-            <Bookmark size={20} className={isSaved ? 'fill-current' : ''} /> 
-            <span className="font-medium">{isSaved ? 'Saved' : 'Save'}</span>
+            <Bookmark size={18} className={isSaved ? 'fill-current' : ''} />
+            <span className="hidden sm:inline">{isSaved ? 'Saved' : 'Save'}</span>
           </button>
-          <button onClick={handleShare} className="flex items-center gap-2 hover:text-purple-500 transition-colors">
-            <Share2 size={20} /> <span className="font-medium">{shareText}</span>
+          <button onClick={handleShare} className="flex items-center gap-2 text-sm font-medium hover:text-purple-500 transition-colors px-3 py-1.5 rounded-xl hover:bg-white dark:hover:bg-zinc-800">
+            <Share2 size={18} /> <span className="hidden sm:inline">{shareText}</span>
           </button>
         </div>
 
-        <article className="prose prose-zinc dark:prose-invert max-w-none prose-lg mb-16" dangerouslySetInnerHTML={{ __html: article.content }} />
-        
+        {/* Article Content */}
+        <article className="article-content mb-16 text-zinc-800 dark:text-zinc-200" dangerouslySetInnerHTML={{ __html: article.content }} />
+
         {/* Comments Section */}
         <section id="comments" className="pt-10 border-t border-zinc-200 dark:border-zinc-800">
-          <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
-            Comments <span className="text-zinc-500 font-normal text-lg">({comments.length})</span>
+          <h2 className="text-2xl font-black mb-8 flex items-center gap-2">
+            <MessageCircle size={22} className="text-blue-500" />
+            Discussion <span className="text-zinc-400 font-normal text-lg">({comments.length})</span>
           </h2>
 
           {user ? (
-            <form onSubmit={handleCommentSubmit} className="mb-10 relative">
-              <textarea
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                placeholder="What are your thoughts?"
-                className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 pr-16 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none min-h-[120px] transition-all"
-                required
-              />
-              <button 
-                type="submit"
-                className="absolute bottom-4 right-4 p-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-50"
-                disabled={!newComment.trim()}
-              >
-                <Send size={20} />
-              </button>
+            <form onSubmit={handleCommentSubmit} className="mb-10">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 text-white flex items-center justify-center font-bold flex-shrink-0 text-sm mt-1">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 relative">
+                  <textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Share your thoughts..."
+                    className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 pr-14 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none min-h-[100px] transition-all text-sm"
+                    required
+                  />
+                  <button
+                    type="submit"
+                    className="absolute bottom-3 right-3 p-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-50"
+                    disabled={!newComment.trim()}
+                  >
+                    <Send size={16} />
+                  </button>
+                </div>
+              </div>
             </form>
           ) : (
-            <div className="mb-10 p-6 bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-2xl text-center">
-              <p className="text-blue-800 dark:text-blue-300 mb-4">You must be signed in to join the discussion.</p>
-              <button onClick={() => router.push('/login')} className="px-6 py-2 bg-blue-500 text-white rounded-full font-medium hover:bg-blue-600 transition-colors">
+            <div className="mb-10 p-6 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/10 dark:to-purple-900/10 border border-blue-100 dark:border-blue-900/30 rounded-2xl text-center">
+              <MessageCircle size={28} className="mx-auto text-blue-400 mb-3" />
+              <p className="text-zinc-700 dark:text-zinc-300 font-medium mb-4">Sign in to join the discussion</p>
+              <button onClick={() => router.push('/login')} className="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full text-sm font-bold hover:opacity-90 transition-opacity">
                 Sign In
               </button>
             </div>
           )}
 
-          <div className="space-y-6">
-            {comments.map((comment: any) => (
-              <motion.div 
+          <div className="space-y-4">
+            {comments.map((comment: any, i) => (
+              <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                key={comment._id} 
-                className="flex gap-4 p-5 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 shadow-sm"
+                transition={{ delay: i * 0.05 }}
+                key={comment._id}
+                className="flex gap-3 p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800"
               >
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 text-white flex items-center justify-center font-bold flex-shrink-0">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 text-white flex items-center justify-center font-bold flex-shrink-0 text-sm">
                   {comment.userId?.name?.charAt(0) || 'U'}
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-bold">{comment.userId?.name || 'User'}</span>
-                    <span className="text-xs text-zinc-500">{new Date(comment.createdAt).toLocaleDateString()}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="font-bold text-sm">{comment.userId?.name || 'User'}</span>
+                    <span className="text-xs text-zinc-400">{new Date(comment.createdAt).toLocaleDateString()}</span>
                   </div>
-                  <p className="text-zinc-700 dark:text-zinc-300">{comment.content}</p>
+                  <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">{comment.content}</p>
                 </div>
               </motion.div>
             ))}
-            
+
             {comments.length === 0 && (
-              <div className="text-center py-10 text-zinc-500 italic">
-                No comments yet. Be the first to share your thoughts!
+              <div className="text-center py-10 text-zinc-400">
+                <MessageCircle size={32} className="mx-auto mb-3 opacity-30" />
+                <p className="text-sm italic">No comments yet. Be the first!</p>
               </div>
             )}
           </div>
