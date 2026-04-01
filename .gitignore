@@ -21,3 +21,14 @@ yarn-debug.log*
 yarn-error.log*
 .DS_Store
 Thumbs.db
+
+# MongoDB Database Files
+backend/WiredTiger*
+backend/collection-*
+backend/index-*
+backend/diagnostic.data/
+backend/journal/
+backend/mongod.lock
+backend/sizeStorer.wt
+backend/storage.bson
+backend/_mdb_catalog.wt
