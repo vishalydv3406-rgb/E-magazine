@@ -23,6 +23,9 @@ function MagazinesContent() {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
+    // 🎯 FINAL FIX: Prevent early calls with undefined/null if searching for a category
+    if (category === undefined) return;
+
     setLoading(true);
     axios.get('/magazines', { params: { category: category || undefined } })
       .then((res: any) => setMagazines(res.data))
@@ -45,13 +48,19 @@ function MagazinesContent() {
           {category && (
             <span className="text-3xl">{categoryEmojis[category] || '📚'}</span>
           )}
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-zinc-900 dark:text-zinc-100">
             {category ? `${category}` : 'All Magazines'}
           </h1>
         </div>
-        <p className="text-zinc-500 dark:text-zinc-400 mt-1">
-          {loading ? 'Loading...' : `${filtered.length} magazine${filtered.length !== 1 ? 's' : ''} available`}
-        </p>
+        <div className="h-6">
+          {loading ? (
+            <p className="text-blue-500 animate-pulse text-sm font-medium">Loading magazines...</p>
+          ) : (
+            <p className="text-zinc-500 dark:text-zinc-400 mt-1 text-sm">
+              {filtered.length} magazine{filtered.length !== 1 ? 's' : ''} available
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Search Bar */}
